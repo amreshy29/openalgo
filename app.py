@@ -124,9 +124,6 @@ from utils.socketio_error_handler import (
 from utils.traffic_logger import init_traffic_logging  # Import traffic logging
 from utils.version import get_version  # Import version management
 
-# Import WebSocket proxy server - using relative import to avoid @ symbol issues
-from websocket_proxy.app_integration import start_websocket_proxy
-
 # Initialize logger
 logger = get_logger(__name__)
 
@@ -909,6 +906,7 @@ if is_docker:
         "Running in Docker/standalone mode - WebSocket server started separately by start.sh"
     )
 else:
+    from websocket_proxy.app_integration import start_websocket_proxy
     # Under gunicorn+eventlet, start_websocket_proxy() spawns a child *process*
     # (not a thread) so the WS asyncio loop never shares an eventlet hub with
     # gunicorn — closes the greenlet.error cross-thread crash class entirely

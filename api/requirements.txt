@@ -1,10 +1,19 @@
 # Vercel-specific requirements — heavy / dev-only packages stripped to stay
-# within the 500 MB ephemeral-storage limit.
+# within the 250 MB bundle threshold (avoids slow runtime pip-install on cold start).
 #
 # Removed vs root requirements.txt:
 #   kaleido          — headless Chromium for chart PNG export (~150 MB)
 #   pyarrow          — Arrow/Parquet support (~40 MB)
 #   fastparquet      — Parquet writer, depends on pyarrow (~5 MB)
+#   zmq==0.0.0       — fake PyPI stub; conflicts with pyzmq (both claim zmq namespace)
+#   pyzmq            — WebSocket proxy disabled on Vercel (APP_MODE=standalone);
+#                      zmq import now guarded inside the else-branch of app.py
+#   duckdb           — Historify DB; imported lazily inside get_connection(), not at startup
+#   python-telegram-bot — Telegram alerts; imported lazily inside async functions
+#   wars             — Telegram dependency
+#   mcp              — Remote MCP server; loaded dynamically via _load_mcpserver_module()
+#   starlette / sse-starlette / uvicorn — MCP ASGI deps, not needed without mcp
+#   choreographer    — browser automation; no module-level import
 #   ipython          — interactive shell, used only by strategy host (~15 MB)
 #   ipykernel        — Jupyter kernel, strategy host only (~5 MB)
 #   ipython-pygments-lexers
@@ -36,13 +45,11 @@ cachetools==7.0.5
 certifi==2024.7.4
 cffi==2.0.0
 charset-normalizer==3.4.7
-choreographer==1.2.1
 click==8.3.2
 colorama==0.4.6
 cryptography==46.0.7
 darkdetect==0.8.0
 dnspython==2.8.0
-duckdb==1.5.2
 email-validator==2.3.0
 fastjsonschema==2.21.2
 Flask==3.1.3
@@ -76,7 +83,6 @@ logzero==1.7.0
 markdown-it-py==4.0.0
 MarkupSafe==2.1.5
 marshmallow==3.26.2
-mcp==1.27.0
 mdurl==0.1.2
 opengreeks==0.2.0
 narwhals==2.19.0
@@ -106,11 +112,8 @@ python-dotenv==1.2.2
 python-engineio==4.13.1
 python-multipart==0.0.27
 python-socketio==5.16.1
-python-telegram-bot==22.6
-wars==0.1.4
 pytz==2026.1.post1
 PyYAML==6.0.3
-pyzmq==27.1.0
 qrcode==8.2
 referencing==0.37.0
 requests==2.33.1
@@ -121,15 +124,12 @@ simplejson==3.20.2
 six==1.17.0
 sniffio==1.3.1
 SQLAlchemy==2.0.49
-sse-starlette==2.4.1
-starlette==1.0.1
 tornado==6.5.5
 typing-extensions>=4.12.2
 typing-inspection>=0.4.1
 tzdata==2025.3
 tzlocal==5.3.1
 urllib3==2.7.0
-uvicorn==0.44.0
 websocket-client==1.9.0
 websockets==15.0.1
 Werkzeug==3.1.8
@@ -137,4 +137,3 @@ wrapt==1.16.0
 wsproto==1.3.2
 WTForms==3.2.1
 zipp==3.23.1
-zmq==0.0.0
