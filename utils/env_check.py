@@ -109,6 +109,11 @@ def check_env_version_compatibility() -> bool:
     Returns:
         bool: True if compatible, False if an update is needed.
     """
+    # On Vercel (and compatible serverless platforms), env vars are injected by
+    # the platform — no .env file is present or needed.
+    if os.environ.get("VERCEL") == "1":
+        return True
+
     base_dir = os.path.dirname(__file__) + "/.."
     env_path = os.path.join(base_dir, ".env")
     sample_env_path = os.path.join(base_dir, ".sample.env")
@@ -1078,6 +1083,13 @@ def load_and_check_env_variables() -> None:
     # Configure LLVMLITE/NUMBA paths FIRST (before any imports can trigger loading)
     # This fixes "failed to map segment from shared object" on hardened Linux servers
     configure_llvmlite_paths()
+
+    # On Vercel, all environment variables are injected by the platform via the
+    # Vercel dashboard. No .env file exists; skip all file-based operations
+    # (version check, key rotation, Fernet salt provisioning). api/index.py sets
+    # sensible defaults before this function is called.
+    if os.environ.get("VERCEL") == "1":
+        return
 
     # Check version compatibility
     if not check_env_version_compatibility():
